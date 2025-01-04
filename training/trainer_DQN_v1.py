@@ -8,7 +8,9 @@ from tianshou.data import Collector, VectorReplayBuffer
 from tianshou.env import DummyVectorEnv
 from tianshou.utils import TensorboardLogger
 from torch.utils.tensorboard import SummaryWriter
-
+# to import from parent directory
+import sys
+sys.path.append('../4x-sight')
 from training_environment import ForexTradingEnv
 from data import get_forex_data
 

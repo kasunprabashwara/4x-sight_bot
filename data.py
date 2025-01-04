@@ -19,4 +19,3 @@ def get_forex_data():
     df['YEN/EURO'] = df['JAPAN - YEN/US$'] / df['EURO AREA - EURO/US$']
     return df
 
-get_forex_data()
