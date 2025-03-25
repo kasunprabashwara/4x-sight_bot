@@ -115,6 +115,12 @@ class MT5Wrapper:
 
     #Code to open and partially close positions
 
+    def connect_mt5():
+        if not mt5.initialize():
+            print("MT5 initialization failed")
+            return False
+        return True
+
     def getOpenLots(positions):
         open_lots = 0
 
@@ -128,7 +134,7 @@ class MT5Wrapper:
 
         positions = mt5.positions_get()
         if positions is None:
-            print("❌ No open positions or failed to retrieve positions.")
+            print("No open positions or failed to retrieve positions.")
             return []
 
         open_lots = 0
@@ -154,7 +160,7 @@ class MT5Wrapper:
 
         positions = mt5.positions_get()
         if positions is None:
-            print("❌ No open positions or failed to retrieve positions.")
+            print("No open positions or failed to retrieve positions.")
             return []
     
         # Extract unique symbols from open positions
@@ -197,7 +203,7 @@ class MT5Wrapper:
             return None
 
         # for pos in _positions:
-        #     print(f"🎯 Ticket: {pos.ticket}, Volume: {pos.volume}, Open Price: {pos.price_open}")
+        #     print(f"Ticket: {pos.ticket}, Volume: {pos.volume}, Open Price: {pos.price_open}")
         sorted_positions = sorted(_positions, key=lambda pos: pos.volume)
         return sorted_positions
 
@@ -277,10 +283,10 @@ class MT5Wrapper:
         # Send trade request
         result = mt5.order_send(request)
         if result.retcode != mt5.TRADE_RETCODE_DONE:
-            print(f"❌ Failed to open position: {result.comment}")
+            print(f"Failed to open position: {result.comment}")
             return False
         else:
-            print(f"✅ Order placed successfully! Order ID: {result.order} (Lot: {lot})")
+            print(f"Order placed successfully! Order ID: {result.order} (Lot: {lot})")
             return True
         
     def close_position(ticket, symbol, volume_to_close, order_type):
@@ -289,30 +295,30 @@ class MT5Wrapper:
 
         tick = mt5.symbol_info_tick(symbol)
         if tick is None:
-            print(f"❌ Symbol {symbol} not found")
+            print(f"Symbol {symbol} not found")
             return False
 
         close_price = tick.bid if order_type == mt5.ORDER_TYPE_BUY else tick.ask
 
-        # ✅ Validate symbol
+        # Validate symbol
         symbol_info = mt5.symbol_info(symbol)
         if symbol_info is None or not symbol_info.trade_mode:
-            print(f"❌ Symbol {symbol} is not tradable.")
+            print(f"Symbol {symbol} is not tradable.")
             return False
 
-        # ✅ Validate lot size
+        # Validate lot size
         if volume_to_close <= 0:
-            print(f"❌ Invalid lot size: {volume_to_close}")
+            print(f"Invalid lot size: {volume_to_close}")
             return False
 
-        # ✅ Validate price
+        # Validate price
         if close_price <= 0:
-            print(f"❌ Invalid closing price: {close_price}")
+            print(f"Invalid closing price: {close_price}")
             return False
 
-        # ✅ Check if AutoTrading is enabled
+        # Check if AutoTrading is enabled
         if not mt5.terminal_info().trade_allowed:
-            print("❌ AutoTrading is disabled. Enable it in MT5 settings.")
+            print("AutoTrading is disabled. Enable it in MT5 settings.")
             return False
 
         # Create trade request
@@ -332,20 +338,20 @@ class MT5Wrapper:
 
         result = mt5.order_send(request)
 
-        # ✅ Check if result is None
+        # Check if result is None
         if result is None:
-            print(f"❌ Order send failed. Check lot size, connection, or logs in MT5.")
+            print(f"Order send failed. Check lot size, connection, or logs in MT5.")
             
             # Print MT5 error logs
             error_code, error_desc = mt5.last_error()
-            print(f"⚠️ Last MT5 Error: {error_code} - {error_desc}")
+            print(f"Last MT5 Error: {error_code} - {error_desc}")
             return False
 
         if result.retcode != mt5.TRADE_RETCODE_DONE:
-            print(f"❌ Failed to close position {ticket}: {result.comment}")
+            print(f"Failed to close position {ticket}: {result.comment}")
             return False
 
-        print(f"✅ Closed {volume_to_close} lot(s) of position {ticket} for {symbol}")
+        print(f"Closed {volume_to_close} lot(s) of position {ticket} for {symbol}")
         return True
         
     def check_and_trade(symbol, lot, order_type, sl_pips=20, tp_pips=50):
