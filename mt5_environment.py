@@ -7,7 +7,6 @@ from gymnasium import Env, spaces
 from gymnasium.spaces import Box, Dict
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
-import MetaTrader5 as mt5
 from mt5_wrapper import MT5Wrapper
 
 LOT_SIZE = 100000
@@ -35,6 +34,7 @@ def get_pair_price_from_row(row, pair, base_currency):
 
 class State:
     def __init__(self, bars_count=30, verbose=False):
+        self.mt5_wrapper = MT5Wrapper(env_file=".env")
         self.bars_count = bars_count
         self._prices = None
         self.balance = None
@@ -52,9 +52,9 @@ class State:
 
         # self._prices = prices.copy()
 
-        self.prices = MT5Wrapper.get_intial_data(self.pairs, self.bars_count)
+        self.prices = self.mt5_wrapper.get_intial_data(self.pairs, self.bars_count)
 
-        self.balance = mt5.account_info().equity
+        self.balance = self.mt5_wrapper.get_account_info().equity
         self.trade_max_percentage = trade_max_percentage
         self.base_currency = base_currency
         self.pairs = pairs
@@ -129,7 +129,7 @@ class State:
         for currency in self.portfolio_currencies:
             if currency != self.base_currency:
                 symbol = f"{currency}{self.base_currency}"
-                price = MT5Wrapper.get_symbol_price(symbol)
+                price = self.mt5_wrapper.get_symbol_price(symbol)
                 if price is not None:
                     next_row[symbol] = price
                 else:
