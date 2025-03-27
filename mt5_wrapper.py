@@ -26,6 +26,9 @@ class MT5Wrapper:
             raise RuntimeError(f"Failed to initialize MT5: {mt5.last_error()}")
         
         print("MetaTrader5 initialized successfully.")
+    def get_account_info(self):
+        """Returns the account information of the connected user."""
+        return mt5.account_info()
 
     def get_terminal_info(self):
         """Returns MetaTrader 5 terminal information."""
@@ -432,12 +435,12 @@ class MT5Wrapper:
         return open_position(symbol, lot, order_type, sl_pips, tp_pips)
 
 # Example usage
-if __name__ == "__main__":
-    mt5_wrapper = MT5Wrapper(env_file=".env")
+# if __name__ == "__main__":
+#     mt5_wrapper = MT5Wrapper(env_file=".env")
 
-    print(mt5_wrapper.get_terminal_info())
-    print(mt5_wrapper.get_version())
+#     print(mt5_wrapper.get_terminal_info())
+#     print(mt5_wrapper.get_version())
 
-    mt5_wrapper.place_buy_order("EURUSD", 0.01)
+#     mt5_wrapper.place_buy_order("EURUSD", 0.01)
 
-    mt5_wrapper.shutdown()
+#     mt5_wrapper.shutdown()
