@@ -1,8 +1,10 @@
 import math
 import time
 
+import torch as th
 import numpy as np
-import pandas as pd
+# import pandas as pd
+from itertools import combinations
 from gymnasium import Env, spaces
 from gymnasium.spaces import Box, Dict
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
@@ -47,7 +49,7 @@ class State:
         self.portfolio_currencies = None  # list of all currencies in portfolio (including base)
         self.leverage = 60  # default leverage ratio
 
-    def reset(self, initial_balance, trade_max_percentage,
+    def reset(self, trade_max_percentage,
               pairs, base_currency, portfolio_currencies):
 
         # self._prices = prices.copy()
@@ -60,7 +62,7 @@ class State:
         self.pairs = pairs
         self.portfolio_currencies = portfolio_currencies
         # Initialize portfolio: all funds in base_currency; zero in others.
-        self.portfolio = {curr: (initial_balance if curr == base_currency else 0) 
+        self.portfolio = {curr: (self.balance if curr == base_currency else 0) 
                           for curr in portfolio_currencies}
         self.ammortized_values = {curr: 0 for curr in portfolio_currencies}
         
@@ -308,7 +310,7 @@ class LSTMFeatureExtractor(BaseFeaturesExtractor):
         return self.combined_fc(combined)
 
 class ForexTradingEnv(Env):
-    def __init__(self, df, currencies=["EUR","GBP"], base_currency="USD", initial_balance=1000,verbose=False,
+    def __init__(self, currencies=["EUR","GBP"], base_currency="USD",verbose=False,
                  bars_count=30, max_steps=5000):
         """
         df: pandas DataFrame containing price data. It is assumed to have columns like "EURUSD", "GBPUSD", etc.
@@ -316,8 +318,7 @@ class ForexTradingEnv(Env):
         base_currency: the base currency (e.g. "USD").
         """
         super(ForexTradingEnv, self).__init__()
-        self.df = df.copy()
-        self.initial_balance = initial_balance
+        # self.initial_balance = initial_balance
         self.bars_count = bars_count
         self.max_steps = max_steps
         self.steps = 0
@@ -356,8 +357,7 @@ class ForexTradingEnv(Env):
         self.steps = 0
         rng = np.random.default_rng(seed)
 
-        self.state.reset(prices=self.df,
-                         initial_balance=self.initial_balance,
+        self.state.reset(
                          trade_max_percentage=0.2,
                          pairs=self.pairs,
                          base_currency=self.base_currency,
@@ -379,3 +379,50 @@ class ForexTradingEnv(Env):
 
         print(f"Portfolio: {self.state.portfolio}")
         print(f"Balance: {self.state.balance}")
+
+
+
+
+if __name__ == "__main__":
+    import time
+
+    # Initialize the ForexTradingEnv
+    env = ForexTradingEnv(
+        currencies=["EUR", "GBP", "JPY"],  # Example currencies
+        base_currency="USD",
+        verbose=True,
+        bars_count=30,
+        max_steps=5000
+    )
+
+    # Reset the environment to get the initial observation
+    observation, _ = env.reset()
+
+    print("Environment initialized. Starting random actions...")
+
+    # Loop to generate and execute random actions
+    for i in range(10):
+        print(f"\nStep {i + 1}:")
+        
+        # Generate a random action based on the action space
+        action = env.action_space.sample()
+        print(f"Generated action: {action}")
+
+        # Execute the action in the environment
+        observation, reward, terminated, truncated, info = env.step(action)
+
+        # Print the results of the step
+        print(f"Reward: {reward}")
+        print(f"Terminated: {terminated}")
+        print(f"Truncated: {truncated}")
+        print(f"Info: {info}")
+
+        # Check if the environment is terminated
+        if terminated:
+            print("Environment terminated. Resetting...")
+            observation, _ = env.reset()
+
+        # Wait for 20 seconds before the next action
+        time.sleep(20)
+
+    print("Random action loop completed.")
