@@ -51,16 +51,17 @@ class State:
 
     def reset(self, trade_max_percentage,
               pairs, base_currency, portfolio_currencies):
-
-        # self._prices = prices.copy()
-
-        self.prices = self.mt5_wrapper.get_intial_data(self.pairs, self.bars_count)
-
-        self.balance = self.mt5_wrapper.get_account_info().equity
+        
         self.trade_max_percentage = trade_max_percentage
         self.base_currency = base_currency
         self.pairs = pairs
         self.portfolio_currencies = portfolio_currencies
+        self.prices = self.mt5_wrapper.get_intial_data(self.pairs, self.bars_count)
+        self.balance = self.mt5_wrapper.get_account_info().equity
+
+        print(f"Initial balance: {self.balance} {self.base_currency}")
+        print(f"Initial prices: {self.prices}")
+
         # Initialize portfolio: all funds in base_currency; zero in others.
         self.portfolio = {curr: (self.balance if curr == base_currency else 0) 
                           for curr in portfolio_currencies}
@@ -388,7 +389,7 @@ if __name__ == "__main__":
 
     # Initialize the ForexTradingEnv
     env = ForexTradingEnv(
-        currencies=["EUR", "GBP", "JPY"],  # Example currencies
+        currencies=["EUR", "GBP"],  # Example currencies
         base_currency="USD",
         verbose=True,
         bars_count=30,
