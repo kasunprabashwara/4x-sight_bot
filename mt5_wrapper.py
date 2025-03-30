@@ -56,31 +56,29 @@ class MT5Wrapper:
         """
         Fetches the initial historical data for the given currency pairs.
 
-        :param pairs: List of currency pair symbols (e.g., ['EURUSD', 'GBPUSD', 'JPYUSD']).
+        :param pairs: List of currency pair symbols (e.g., ('EUR','USD'), ('GBP','USD'), ('JPY,USD')]).
         :param bars_count: Number of past hourly data points to fetch.
         :return: A DataFrame containing the last `bars_count` rows for the given pairs.
         """
-        # if not mt5.initialize():
-        #     raise RuntimeError(f"Failed to initialize MT5: {mt5.last_error()}")
 
         # Dictionary to store data for each pair
         data = {}
 
         for pair in pairs:
+            # Convert tuple to string format (e.g., ('EUR', 'USD') -> "EURUSD")
+            symbol = ''.join(pair)
+
             # Fetch historical rates for the symbol
-            rates = mt5.copy_rates_from_pos(pair, mt5.TIMEFRAME_H1, 0, bars_count)
+            rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_H1, 0, bars_count)
             if rates is None:
-                print(f"Failed to fetch data for {pair}: {mt5.last_error()}")
+                print(f"Failed to fetch data for {symbol}: {mt5.last_error()}")
                 continue
 
             # Convert to DataFrame
             rates_df = pd.DataFrame(rates)
 
             # Add the close prices to the data dictionary
-            data[pair] = rates_df['close']
-
-        # Ensure MT5 is shut down after fetching data
-        mt5.shutdown()
+            data[symbol] = rates_df['close']
 
         # Convert the data dictionary to a DataFrame
         df = pd.DataFrame(data)
