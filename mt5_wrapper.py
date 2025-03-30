@@ -154,13 +154,15 @@ class MT5Wrapper:
 
     #Code to open and partially close positions
 
-    def connect_mt5():
-        if not mt5.initialize():
-            print("MT5 initialization failed")
-            return False
+    def connect_mt5(self):
+        if not self.connected:
+            if not mt5.initialize():
+                print("MT5 initialization failed")
+                return False
+            self.connected = True
         return True
 
-    def getOpenLots(positions):
+    def getOpenLots(self, positions):
         open_lots = 0
 
         for pos in positions:
@@ -168,7 +170,7 @@ class MT5Wrapper:
         return open_lots
     
     def checkOppositeOpenLots(symbol, order_type):
-        if not connect_mt5():
+        if not self.connect_mt5():
             return False
 
         positions = mt5.positions_get()
@@ -194,7 +196,7 @@ class MT5Wrapper:
         return open_lots
     
     def checkAllOpenLots():
-        if not connect_mt5():
+        if not self.connect_mt5():
             return False
 
         positions = mt5.positions_get()
@@ -221,8 +223,8 @@ class MT5Wrapper:
             if open_sell_lots > 0:
                 print(f"Open {symbol} Sell Lots: {open_sell_lots}")
 
-    def getPositions(symbol, order_type):
-        if not connect_mt5():
+    def getPositions(self, symbol, order_type):
+        if not self.connect_mt5():
             return None
 
         positions = mt5.positions_get(symbol=symbol)
@@ -247,11 +249,11 @@ class MT5Wrapper:
         return sorted_positions
 
     # Function to get a summary of all open positions
-    def get_open_positions():
+    def get_open_positions(self):
         """
         Retrieves and prints a summary of all currently open positions.
         """
-        if not connect_mt5():
+        if not self.connect_mt5():
             return
 
         positions = mt5.positions_get()
@@ -268,11 +270,11 @@ class MT5Wrapper:
             print(f"{pos.ticket:<10} {pos.symbol:<8} {order_type:<6} {pos.volume:<6.2f} {pos.price_open:<10.5f} {pos.sl:<10.5f} {pos.tp:<10.5f} {pos.profit:<10.2f}")
         print("------------------------------------------------------") 
 
-    def open_position(symbol, lot, order_type, sl_pips=20, tp_pips=50, deviation=10):
+    def open_position(self, symbol, lot, order_type, sl_pips=20, tp_pips=50, deviation=10):
         """
         Opens a market order (Buy or Sell) with valid SL/TP.
         """
-        if not connect_mt5():
+        if not self.connect_mt5():
             return False
 
         symbol_info = mt5.symbol_info(symbol)
@@ -328,8 +330,8 @@ class MT5Wrapper:
             print(f"Order placed successfully! Order ID: {result.order} (Lot: {lot})")
             return True
         
-    def close_position(ticket, symbol, volume_to_close, order_type):
-        if not connect_mt5():
+    def close_position(self, ticket, symbol, volume_to_close, order_type):
+        if not self.connect_mt5():
             return False
 
         tick = mt5.symbol_info_tick(symbol)
@@ -393,12 +395,12 @@ class MT5Wrapper:
         print(f"Closed {volume_to_close} lot(s) of position {ticket} for {symbol}")
         return True
         
-    def check_and_trade(symbol, lot, order_type, sl_pips=20, tp_pips=50):
+    def check_and_trade(self, symbol, lot, order_type, sl_pips=20, tp_pips=50):
         """
         Checks if an opposite position exists for the same symbol.
         If found, closes it partially or fully before opening a new trade.
         """
-        if not connect_mt5():
+        if not self.connect_mt5():
             return False
 
         if order_type == "buy":
