@@ -85,78 +85,6 @@ class MT5Wrapper:
 
         return df
 
-
-
-    def place_buy_order(self, symbol: str, volume: float):
-        """
-        Places a buy order for the given symbol and volume.
-
-        :param symbol: The symbol to trade (e.g., "EURUSD").
-        :param volume: The lot size for the trade.
-        """
-        price = self.get_symbol_price(symbol)
-        if price is None:
-            print("Buy order aborted: Unable to retrieve price.")
-            return
-
-        request = {
-            "action": mt5.TRADE_ACTION_DEAL,
-            "symbol": symbol,
-            "volume": volume,
-            "type": mt5.ORDER_TYPE_BUY,
-            "price": price,
-            "deviation": 20,
-            "magic": 234000,
-            "comment": "Python buy order",
-            "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
-        }
-        result = mt5.order_send(request)
-        if result.retcode != mt5.TRADE_RETCODE_DONE:
-            print(f"Failed to place buy order: {result.comment}")
-        else:
-            print(f"Buy order placed successfully: {result}")
-
-    def place_sell_order(self, symbol: str, volume: float):
-        """
-        Places a sell order for the given symbol and volume.
-
-        :param symbol: The symbol to trade (e.g., "EURUSD").
-        :param volume: The lot size for the trade.
-        """
-        tick = mt5.symbol_info_tick(symbol)
-        if not tick:
-            print(f"Sell order aborted: Unable to retrieve price for {symbol}.")
-            return
-
-        request = {
-            "action": mt5.TRADE_ACTION_DEAL,
-            "symbol": symbol,
-            "volume": volume,
-            "type": mt5.ORDER_TYPE_SELL,
-            "price": tick.bid,
-            "deviation": 20,
-            "magic": 234000,
-            "comment": "Python sell order",
-            "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
-        }
-        result = mt5.order_send(request)
-        if result.retcode != mt5.TRADE_RETCODE_DONE:
-            print(f"Failed to place sell order: {result.comment}")
-        else:
-            print(f"Sell order placed successfully: {result}")
-
-    #Code to open and partially close positions
-
-    def connect_mt5(self):
-        if not self.connected:
-            if not mt5.initialize():
-                print("MT5 initialization failed")
-                return False
-            self.connected = True
-        return True
-
     def getOpenLots(self, positions):
         open_lots = 0
 
@@ -165,8 +93,8 @@ class MT5Wrapper:
         return open_lots
     
     def checkOppositeOpenLots(self, symbol, order_type):
-        if not self.connect_mt5():
-            return False
+        # if not self.connect_mt5():
+        #     return False
 
         positions = mt5.positions_get()
         if positions is None:
@@ -191,8 +119,8 @@ class MT5Wrapper:
         return open_lots
     
     def checkAllOpenLots(self):
-        if not self.connect_mt5():
-            return False
+        # if not self.connect_mt5():
+        #     return False
 
         positions = mt5.positions_get()
         if positions is None:
@@ -219,8 +147,8 @@ class MT5Wrapper:
                 print(f"Open {symbol} Sell Lots: {open_sell_lots}")
 
     def getPositions(self, symbol, order_type):
-        if not self.connect_mt5():
-            return None
+        # if not self.connect_mt5():
+        #     return None
 
         positions = mt5.positions_get(symbol=symbol)
 
@@ -248,8 +176,8 @@ class MT5Wrapper:
         """
         Retrieves and prints a summary of all currently open positions.
         """
-        if not self.connect_mt5():
-            return
+        # if not self.connect_mt5():
+        #     return
 
         positions = mt5.positions_get()
         if positions is None or len(positions) == 0:
@@ -269,8 +197,8 @@ class MT5Wrapper:
         """
         Opens a market order (Buy or Sell) with valid SL/TP.
         """
-        if not self.connect_mt5():
-            return False
+        # if not self.connect_mt5():
+        #     return False
 
         symbol_info = mt5.symbol_info(symbol)
         if symbol_info is None:
@@ -326,8 +254,8 @@ class MT5Wrapper:
             return True
         
     def close_position(self, ticket, symbol, volume_to_close, order_type):
-        if not self.connect_mt5():
-            return False
+        # if not self.connect_mt5():
+        #     return False
 
         tick = mt5.symbol_info_tick(symbol)
         if tick is None:
@@ -420,8 +348,8 @@ class MT5Wrapper:
         """
 
         # Establish connection to MT5
-        if not self.connect_mt5():
-            return False
+        # if not self.connect_mt5():
+        #     return False
 
         LOT_SIZE = 100000  # Define the lot size for the trade
 
@@ -442,7 +370,8 @@ class MT5Wrapper:
 
         # Calculate the lot size.
         # Assumes LOT_SIZE is defined elsewhere in your code.
-        lot = trade_amount / LOT_SIZE
+        lot = float(trade_amount / LOT_SIZE)
+
 
         # Check if there is an opposite position that needs to be closed.
         if order_type == "buy":
@@ -481,13 +410,13 @@ class MT5Wrapper:
         mt5.shutdown()
         print("MetaTrader5 shut down.")
 
-# Example usage
-if __name__ == "__main__":
-    mt5_wrapper = MT5Wrapper(env_file=".env")
+# # Example usage
+# if __name__ == "__main__":
+#     mt5_wrapper = MT5Wrapper(env_file=".env")
 
-    print(mt5_wrapper.get_terminal_info())
-    print(mt5_wrapper.get_version())
+#     print(mt5_wrapper.get_terminal_info())
+#     print(mt5_wrapper.get_version())
 
-    mt5_wrapper.place_buy_order("EURUSD", 0.01)
+#     mt5_wrapper.place_buy_order("EURUSD", 0.01)
 
-    mt5_wrapper.shutdown()
+#     mt5_wrapper.shutdown()
