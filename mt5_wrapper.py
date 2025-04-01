@@ -147,11 +147,6 @@ class MT5Wrapper:
         else:
             print(f"Sell order placed successfully: {result}")
 
-    def shutdown(self):
-        """Shuts down the MetaTrader 5 connection."""
-        mt5.shutdown()
-        print("MetaTrader5 shut down.")
-
     #Code to open and partially close positions
 
     def connect_mt5(self):
@@ -433,6 +428,11 @@ class MT5Wrapper:
         
         # If no opposite position exists, open a new trade
         return open_position(symbol, lot, order_type, sl_pips, tp_pips)
+    
+    def shutdown(self):
+        """Shuts down the MetaTrader 5 connection."""
+        mt5.shutdown()
+        print("MetaTrader5 shut down.")
 
 # Example usage
 # if __name__ == "__main__":
