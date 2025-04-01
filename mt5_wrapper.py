@@ -389,15 +389,62 @@ class MT5Wrapper:
 
         print(f"Closed {volume_to_close} lot(s) of position {ticket} for {symbol}")
         return True
+    def is_symbol_available(self, symbol):
+        # Ensure MetaTrader 5 is initialized; if not, you may need to call your init function.
+        if not mt5.initialize():
+            print("MetaTrader5 is not initialized.")
+            return False
+
+        # Retrieve all available symbols from MT5.
+        all_symbols = mt5.symbols_get()
+        if all_symbols is None:
+            print("Failed to retrieve symbols from MetaTrader 5.")
+            return False
+
+        # Build a set of available symbol names for efficient lookup.
+        available_symbols = {s.name for s in all_symbols}
+
+        return symbol in available_symbols
         
-    def check_and_trade(self, symbol, lot, order_type, sl_pips=20, tp_pips=50):
+    def check_and_trade(self, currency_A, currency_B, trade_amount, sl_pips=20, tp_pips=50):
         """
-        Checks if an opposite position exists for the same symbol.
-        If found, closes it partially or fully before opening a new trade.
+        Executes a trade by selling currency B to buy currency A.
+        Determines the correct MT5 symbol and order type based on available pairs.
+        
+        Parameters:
+            currency_A (str): The currency you want to buy.
+            currency_B (str): The currency you are selling.
+            trade_amount (float): The amount of currency B to use for the trade.
+            sl_pips (int): Stop loss in pips.
+            tp_pips (int): Take profit in pips.
         """
+
+        # Establish connection to MT5
         if not self.connect_mt5():
             return False
 
+        LOT_SIZE = 100000  # Define the lot size for the trade
+
+        # Determine the symbol and the corresponding order type.
+        # Try the direct pair (A/B) first.
+        symbol_direct = f"{currency_A}{currency_B}"
+        symbol_inverse = f"{currency_B}{currency_A}"
+        
+        if self.is_symbol_available(symbol_direct):
+            symbol = symbol_direct
+            order_type = "buy"  # With direct symbol, a 'buy' means buying A using B.
+        elif self.is_symbol_available(symbol_inverse):
+            symbol = symbol_inverse
+            order_type = "sell"  # With inverse symbol, selling the base (B) will get you A.
+        else:
+            print(f"Symbol not available in MT5 for pair: {currency_A} and {currency_B}")
+            return False
+
+        # Calculate the lot size.
+        # Assumes LOT_SIZE is defined elsewhere in your code.
+        lot = trade_amount / LOT_SIZE
+
+        # Check if there is an opposite position that needs to be closed.
         if order_type == "buy":
             positions = self.getPositions(symbol, order_type="sell")
         else:
@@ -412,7 +459,6 @@ class MT5Wrapper:
                     self.close_position(pos.ticket, pos.symbol, pos.volume, pos.type)
                 self.open_position(symbol, round(lotsToOpen, 4), order_type, sl_pips, tp_pips)
                 return
-            
             if openLotVolume > lot:
                 remainingLotsToClose = lot
                 for pos in positions:
@@ -423,11 +469,12 @@ class MT5Wrapper:
                         if remainingLotsToClose == 0:
                             return
                     else:
-                        print(f"🔄 Partial close: Closing {round(remainingLotsToClose, 4)} lot(s) from {pos.ticket}")
-                        return self.close_position(pos.ticket, pos.symbol, (round(remainingLotsToClose, 4)), pos.type)
-        
-        # If no opposite position exists, open a new trade
+                        print(f"🔄 Partial close: Closing {round(remainingLotsToClose, 4)} lot(s) from ticket {pos.ticket}")
+                        return self.close_position(pos.ticket, pos.symbol, round(remainingLotsToClose, 4), pos.type)
+
+        # If no opposite position exists, open a new position.
         return self.open_position(symbol, lot, order_type, sl_pips, tp_pips)
+
     
     def shutdown(self):
         """Shuts down the MetaTrader 5 connection."""
