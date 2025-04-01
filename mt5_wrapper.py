@@ -427,16 +427,12 @@ class MT5Wrapper:
                         return self.close_position(pos.ticket, pos.symbol, (round(remainingLotsToClose, 4)), pos.type)
         
         # If no opposite position exists, open a new trade
-<<<<<<< HEAD
-        return open_position(symbol, lot, order_type, sl_pips, tp_pips)
+        return self.open_position(symbol, lot, order_type, sl_pips, tp_pips)
     
     def shutdown(self):
         """Shuts down the MetaTrader 5 connection."""
         mt5.shutdown()
         print("MetaTrader5 shut down.")
-=======
-        return self.open_position(symbol, lot, order_type, sl_pips, tp_pips)
->>>>>>> 1af37401153bbf33ddbc268e55d62266ed092738
 
 # Example usage
 if __name__ == "__main__":
