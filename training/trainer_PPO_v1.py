@@ -9,8 +9,12 @@ from torch.utils.tensorboard import SummaryWriter
 from tianshou.utils.net.common import ActorCritic,Net
 
 from tianshou.utils.net.discrete import Actor, Critic
+# to import from parent directory
+import sys
+sys.path.append('../4x-sight')
 from training_environment import ForexTradingEnv
 from data import get_forex_data
+
 
 # Step 1: Prepare the Dataset and Environment
 data = get_forex_data()
@@ -18,7 +22,7 @@ split_index = int(0.8 * len(data))
 train_data = data.iloc[:split_index]
 test_data = data.iloc[split_index:]
 
-train_envs = DummyVectorEnv([lambda: ForexTradingEnv(train_data)] * 5)  # Multiple envs for parallel training
+train_envs = VectorEnv([lambda: ForexTradingEnv(train_data)] * 5)  # Multiple envs for parallel training
 test_envs = DummyVectorEnv([lambda: ForexTradingEnv(test_data)] * 2)
 sample_env = ForexTradingEnv(test_data)
 
@@ -74,6 +78,10 @@ def stop_fn(mean_reward):
     # Early stopping condition
     return mean_reward >= 1000
 
+def save_checkpoint(epochs,steps,gradient_steps):
+    # Save the model checkpoint
+    torch.save(policy.state_dict(), policy_path)
+    print(f"Model saved at epoch {epochs}, step {steps}, gradient step {gradient_steps}")
 # Step 6: Train the Model
 trainer = OnpolicyTrainer(
     policy=policy,
@@ -83,12 +91,14 @@ trainer = OnpolicyTrainer(
     step_per_epoch=10000,
     repeat_per_collect=10,
     episode_per_test=10,
+    save_checkpoint_fn = save_checkpoint,
     batch_size=256,
     step_per_collect=2000,
     stop_fn=stop_fn,
     logger=logger,
     verbose=True,
 )
+
 
 # Train the model and log results
 result = trainer.run()

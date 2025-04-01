@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
+import os
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras.models import load_model
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-
 
 class LSTMForexPredictor:
     def __init__(self, look_back=30):
@@ -21,10 +21,11 @@ class LSTMForexPredictor:
         try:
             self.model = load_model(model_path)
             print(f"Model loaded from {model_path}")
-        except ValueError:
+        except (OSError,ValueError):
             print(f"No model found at {model_path}")
             # train the model
             self.train("data\Foreign_Exchange_Rates.csv", "EURO AREA - EURO/US$", 0.8, 100, 16)
+            os.makedirs(os.path.dirname(model_path), exist_ok=True)
             self.model.save(model_path)
             print(f"Model saved to {model_path}")
 
@@ -91,15 +92,15 @@ class LSTMForexPredictor:
         past_sequence = self.scaler.fit_transform(np.array(past_sequence).reshape(self.look_back, 1))
         future_predictions = []
         
-        # Generate predictions iteratively
         for _ in range(future_steps):
             prediction = self.model.predict(past_sequence.reshape(1, self.look_back, 1), verbose=0)
-            future_predictions.append(prediction[0, 0])
-            past_sequence = np.append(past_sequence[1:], prediction, axis=0)
+            prediction_scalar = float(prediction[0, 0])  # Explicitly convert to scalar
+            future_predictions.append(prediction_scalar)
+            past_sequence = np.append(past_sequence[1:], [[prediction_scalar]], axis=0)
         
-        # Inverse transform the predictions
         future_predictions = self.scaler.inverse_transform(np.array(future_predictions).reshape(-1, 1))
         return future_predictions
+
     
 if __name__ == "__main__":
     predictor = LSTMForexPredictor(look_back=30)
