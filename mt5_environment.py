@@ -169,6 +169,10 @@ class State:
                 # You spend trade_amount of B to get (trade_amount/price) of A.
                 self.portfolio[A] += trade_amount * a_base_price
                 self.portfolio[B] -= trade_amount * b_base_price
+                # ----------------------------------------------------------------------------------------------------------------------------------------------------
+                # self.mt5_wrapper.
+
+
                 if reward_type =="InDirect":
                     if A == self.base_currency:
                         reward += trade_amount - (self.ammortized_values[B]/self.portfolio[B]) * trade_amount * b_base_price

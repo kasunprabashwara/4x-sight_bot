@@ -164,7 +164,7 @@ class MT5Wrapper:
             open_lots += pos.volume
         return open_lots
     
-    def checkOppositeOpenLots(symbol, order_type):
+    def checkOppositeOpenLots(self, symbol, order_type):
         if not self.connect_mt5():
             return False
 
@@ -190,7 +190,7 @@ class MT5Wrapper:
         
         return open_lots
     
-    def checkAllOpenLots():
+    def checkAllOpenLots(self):
         if not self.connect_mt5():
             return False
 
@@ -399,18 +399,18 @@ class MT5Wrapper:
             return False
 
         if order_type == "buy":
-            positions = getPositions(symbol, order_type="sell")
+            positions = self.getPositions(symbol, order_type="sell")
         else:
-            positions = getPositions(symbol, order_type="buy")
+            positions = self.getPositions(symbol, order_type="buy")
 
         if positions is not None:
-            openLotVolume = getOpenLots(positions)
+            openLotVolume = self.getOpenLots(positions)
             if openLotVolume <= lot:
                 lotsToOpen = lot - openLotVolume
                 for pos in positions:
                     print(f"🔄 Full close: Closing ticket {pos.ticket}")
-                    close_position(pos.ticket, pos.symbol, pos.volume, pos.type)
-                open_position(symbol, round(lotsToOpen, 4), order_type, sl_pips, tp_pips)
+                    self.close_position(pos.ticket, pos.symbol, pos.volume, pos.type)
+                self.open_position(symbol, round(lotsToOpen, 4), order_type, sl_pips, tp_pips)
                 return
             
             if openLotVolume > lot:
@@ -418,29 +418,33 @@ class MT5Wrapper:
                 for pos in positions:
                     if pos.volume <= remainingLotsToClose:
                         print(f"🔄 Full close: Closing ticket {pos.ticket}")
-                        close_position(pos.ticket, pos.symbol, pos.volume, pos.type)
+                        self.close_position(pos.ticket, pos.symbol, pos.volume, pos.type)
                         remainingLotsToClose -= pos.volume
                         if remainingLotsToClose == 0:
                             return
                     else:
                         print(f"🔄 Partial close: Closing {round(remainingLotsToClose, 4)} lot(s) from {pos.ticket}")
-                        return close_position(pos.ticket, pos.symbol, (round(remainingLotsToClose, 4)), pos.type)
+                        return self.close_position(pos.ticket, pos.symbol, (round(remainingLotsToClose, 4)), pos.type)
         
         # If no opposite position exists, open a new trade
+<<<<<<< HEAD
         return open_position(symbol, lot, order_type, sl_pips, tp_pips)
     
     def shutdown(self):
         """Shuts down the MetaTrader 5 connection."""
         mt5.shutdown()
         print("MetaTrader5 shut down.")
+=======
+        return self.open_position(symbol, lot, order_type, sl_pips, tp_pips)
+>>>>>>> 1af37401153bbf33ddbc268e55d62266ed092738
 
 # Example usage
-# if __name__ == "__main__":
-#     mt5_wrapper = MT5Wrapper(env_file=".env")
+if __name__ == "__main__":
+    mt5_wrapper = MT5Wrapper(env_file=".env")
 
-#     print(mt5_wrapper.get_terminal_info())
-#     print(mt5_wrapper.get_version())
+    print(mt5_wrapper.get_terminal_info())
+    print(mt5_wrapper.get_version())
 
-#     mt5_wrapper.place_buy_order("EURUSD", 0.01)
+    mt5_wrapper.place_buy_order("EURUSD", 0.01)
 
-#     mt5_wrapper.shutdown()
+    mt5_wrapper.shutdown()
