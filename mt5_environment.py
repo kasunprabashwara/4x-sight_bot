@@ -2,7 +2,9 @@ import math
 import time
 
 import torch as th
+import torch.nn as nn
 import numpy as np
+import pandas as pd
 # import pandas as pd
 from itertools import combinations
 from gymnasium import Env, spaces
@@ -22,6 +24,9 @@ def get_pair_price_from_row(row, pair, base_currency):
       - If the first currency equals the base, then the price is 1/(price from f"{other}{base_currency}").
       - Otherwise, compute the cross rate as (price of A in base)/(price of B in base).
     """
+    # print(f"Row: {row}")
+    # print("Type: " ,type(row))
+
     A, B = pair
     if A == B:
         return 1.0
@@ -60,7 +65,8 @@ class State:
         self.balance = self.mt5_wrapper.get_account_info().equity
 
         print(f"Initial balance: {self.balance} {self.base_currency}")
-        print(f"Initial prices: {self.prices}")
+        print(self.prices.head())  # If it's a DataFrame
+        print(type(self.prices))  # Ensure it's a DataFrame or structured array
 
         # Initialize portfolio: all funds in base_currency; zero in others.
         self.portfolio = {curr: (self.balance if curr == base_currency else 0) 
@@ -83,12 +89,12 @@ class State:
         past_prices = np.zeros((bars, num_pairs), dtype=np.float32)
 
         # Compute price for each pair for every historical row.
-        for i, row in enumerate(historical):
+        for i, row in historical.iterrows():
             for j, pair in enumerate(self.pairs):
                 past_prices[i, j] = self.get_pair_price(row, pair)
 
         # Compute current portfolio value in base currency using the latest row.
-        current_row = historical[-1]
+        current_row = historical.iloc[-1]
         total_value = 0.0
         portfolio_values = {}
         for curr, amt in self.portfolio.items():
@@ -125,7 +131,7 @@ class State:
         Returns the reward.
         """
         reward = 0
-        current_row = self.prices[-1]  # Use the latest row in `prices`.
+        current_row = self.prices.iloc[-1]  # Use the latest row in `prices`.
 
         # Fetch the next row of live data and update `prices`.
         next_row = {}
@@ -140,7 +146,10 @@ class State:
                     return 0, True, {"error": f"Failed to fetch price for {symbol}"}
 
         
-        self.prices = np.vstack([self.prices[1:], next_row])  # Remove the oldest row and append the new one.
+        # Convert next_row to a DataFrame with the same structure as self.prices
+        next_row_df = pd.DataFrame([next_row], columns=self.prices.columns)
+        # Append the new row and remove the oldest row
+        self.prices = pd.concat([self.prices.iloc[1:], next_row_df], ignore_index=True)
 
         num_pairs = len(self.pairs)
         # For each pair, compute a max trade amount (dividing available leverage across pairs)
@@ -166,7 +175,8 @@ class State:
                     self.ammortized_values[A] += trade_amount
                     self.ammortized_values[B] -= trade_amount
                 if self.verbose:
-                    print(f"{current_row['Timestamp']}: Spent {trade_amount* b_base_price:.2f} {B} to buy {trade_amount* a_base_price:.2f} {A}")
+                    # print(f"{current_row['Timestamp']}: Spent {trade_amount* b_base_price:.2f} {B} to buy {trade_amount* a_base_price:.2f} {A}")
+                    print(f"Spent {trade_amount* b_base_price:.2f} {B} to buy {trade_amount* a_base_price:.2f} {A}")
         # Compute new total portfolio value in base currency using next_row prices.
         new_value = 0.0
         for curr, amt in self.portfolio.items():
