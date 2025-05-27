@@ -1,5 +1,0 @@
-tianshou
-MetaTrader5
-tensorflow
-python-dotenv
-scikit-learn
