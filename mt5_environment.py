@@ -412,31 +412,27 @@ if __name__ == "__main__":
     # Reset the environment to get the initial observation
     observation, _ = env.reset()
 
-    print("Environment initialized. Starting random actions...")
+    print("Environment initialized. Starting live trading...")
 
     # Loop to generate and execute random actions
-    for i in range(10):
-        print(f"\nStep {i + 1}:")
-        
-        # Generate a random action based on the action space
-        action = env.action_space.sample()
-        print(f"Generated action: {action}")
+    try:
+        while True:
+            # Generate a random action based on the action space
+            action = env.action_space.sample()
+            print(f"Computed action: {action}")
+            # Execute the action in the environment
+            observation, reward, terminated, truncated, info = env.step(action)
+            # Print the results of the step
+            print(f"Reward: {reward}")
+            print(f"Info: {info}")
 
-        # Execute the action in the environment
-        observation, reward, terminated, truncated, info = env.step(action)
+            # Check if the environment is terminated
+            if terminated:
+                print("Environment terminated. Resetting...")
+                observation, _ = env.reset()
+            # Wait for 20 seconds before the next action
+            time.sleep(20)
+            print("--------------------------------")
+    except KeyboardInterrupt:
+        print("Trading loop completed.")
 
-        # Print the results of the step
-        print(f"Reward: {reward}")
-        print(f"Terminated: {terminated}")
-        print(f"Truncated: {truncated}")
-        print(f"Info: {info}")
-
-        # Check if the environment is terminated
-        if terminated:
-            print("Environment terminated. Resetting...")
-            observation, _ = env.reset()
-
-        # Wait for 20 seconds before the next action
-        time.sleep(20)
-
-    print("Random action loop completed.")

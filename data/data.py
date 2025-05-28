@@ -2,7 +2,7 @@ import pandas as pd
 
 def get_forex_data():
     # Load the dataset
-    data_set = pd.read_csv('/kaggle/input/price-ticks/Hourly_Rates.csv', na_values='ND', parse_dates=['Timestamp'])
+    data_set = pd.read_csv('data\Foreign_Exchange_Rates.csv', na_values='ND', parse_dates=['Timestamp'])
     
     # Interpolate missing values to handle missing data
     data_set.interpolate(inplace=True)
