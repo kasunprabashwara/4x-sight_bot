@@ -5,7 +5,7 @@ from sb3_contrib import RecurrentPPO
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import VecNormalize
 from src.data import get_forex_data
-from src.environment import ForexTradingEnv
+from src.training_environment import TrainingForexEnv
 from src.model import LSTMFeatureExtractor
 from src.config import (
     MODEL_SAVE_PATH, 
@@ -27,7 +27,7 @@ def train_model():
     train_data = data.iloc[:split_index]
 
     kwargs = {"df": train_data}
-    train_envs = make_vec_env(ForexTradingEnv, n_envs=N_ENVS, env_kwargs=kwargs)
+    train_envs = make_vec_env(TrainingForexEnv, n_envs=N_ENVS, env_kwargs=kwargs)
     train_envs = VecNormalize(train_envs, norm_obs=True, norm_reward=True, clip_obs=10.0)
 
     policy_kwargs = dict(
