@@ -1,6 +1,7 @@
-venv
+myenv
 __pycache__
 policies
 models
 logs
 *.env
+.venv

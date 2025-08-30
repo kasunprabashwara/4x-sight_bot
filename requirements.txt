@@ -1,0 +1,8 @@
+pandas
+numpy
+gymnasium
+sb3-contrib
+torch
+MetaTrader5
+python-dotenv
+schedule
